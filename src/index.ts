@@ -90,16 +90,23 @@ async function viewEmployees() {
   console.table(result.rows);
 }
 
+// Add department
 async function addDepartment() {
   const { name } = await inquirer.prompt([
     { type: 'input', name: 'name', message: 'Department name:' }
   ]);
-  await db.query('INSERT INTO department (name) VALUES (?)', [name]);
-  console.log(`Added department: ${name}`);
+  if (!name || !name.trim()) {
+    console.log('Department name cannot be empty.');
+    return;
+  }
+  await db.query('INSERT INTO department (name) VALUES ($1)', [name.trim()]);
+  console.log(`Added department: ${name.trim()}`);
 }
 
+// Add role
 async function addRole() {
-  const [departments]: any = await db.query('SELECT id, name FROM department');
+  const departmentsResult = await db.query('SELECT id, name FROM department');
+  const departments = departmentsResult.rows;
   const { title, salary, department_id } = await inquirer.prompt([
     { type: 'input', name: 'title', message: 'Role title:' },
     { type: 'input', name: 'salary', message: 'Salary:' },
@@ -110,13 +117,19 @@ async function addRole() {
       choices: departments.map((d: any) => ({ name: d.name, value: d.id }))
     }
   ]);
-  await db.query('INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)', [title, salary, department_id]);
-  console.log(`Added role: ${title}`);
+  await db.query(
+    'INSERT INTO role (title, salary, department_id) VALUES ($1, $2, $3)',
+    [title, salary, department_id]
+  );
+  console.log(`Added role: ${title} with salary ${salary}`);
 }
 
+// Add employee
 async function addEmployee() {
-  const [roles]: any = await db.query('SELECT id, title FROM role');
-  const [employees]: any = await db.query('SELECT id, first_name, last_name FROM employee');
+  const rolesResult = await db.query('SELECT id, title FROM role');
+  const roles = rolesResult.rows;
+  const employeesResult = await db.query('SELECT id, first_name, last_name FROM employee');
+  const employees = employeesResult.rows;
   const { first_name, last_name, role_id, manager_id } = await inquirer.prompt([
     { type: 'input', name: 'first_name', message: "Employee's first name:" },
     { type: 'input', name: 'last_name', message: "Employee's last name:" },
@@ -139,15 +152,18 @@ async function addEmployee() {
     }
   ]);
   await db.query(
-    'INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)',
+    'INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)',
     [first_name, last_name, role_id, manager_id]
   );
   console.log(`Added employee: ${first_name} ${last_name}`);
 }
 
+// Update employee role
 async function updateEmployeeRole() {
-  const [employees]: any = await db.query('SELECT id, first_name, last_name FROM employee');
-  const [roles]: any = await db.query('SELECT id, title FROM role');
+  const employeesResult = await db.query('SELECT id, first_name, last_name FROM employee');
+  const employees = employeesResult.rows;
+  const rolesResult = await db.query('SELECT id, title FROM role');
+  const roles = rolesResult.rows;
   const { employee_id, role_id } = await inquirer.prompt([
     {
       type: 'list',
@@ -165,7 +181,10 @@ async function updateEmployeeRole() {
       choices: roles.map((r: any) => ({ name: r.title, value: r.id }))
     }
   ]);
-  await db.query('UPDATE employee SET role_id = ? WHERE id = ?', [role_id, employee_id]);
+  await db.query(
+    'UPDATE employee SET role_id = $1 WHERE id = $2',
+    [role_id, employee_id]
+  );
   console.log('Employee role updated.');
 }
 
