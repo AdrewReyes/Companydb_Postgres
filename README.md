@@ -158,7 +158,7 @@ This project is licensed under the MIT License.
 
 ## Walkthrough Video
 
-[*Walkthrough video link here.*](https://app.screencastify.com/v2/manage/videos/RUiJcxGvZ1JZWXMtekWm?)
+[*Walkthrough video link here.*](https://app.screencastify.com/watch/RUiJcxGvZ1JZWXMtekWm)
 
 ---
 
